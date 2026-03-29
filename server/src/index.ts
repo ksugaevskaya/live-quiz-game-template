@@ -285,6 +285,22 @@ wss.on("connection", (ws, request) => {
 
   ws.on("close", () => {
     console.log("Client disconnected");
+    const user = users.find((u) => u.ws === ws);
+    if (!user) return;
+
+    games.forEach((game) => {
+      const playerIndex = game.players.findIndex((p) => p.index === user.index);
+      if (playerIndex !== -1) {
+        game.players.splice(playerIndex, 1);
+
+        const playersList = game.players.map((p) => ({
+          name: p.name,
+          index: p.index,
+          score: p.score,
+        }));
+        broadcastToGame(game.id, "update_players", playersList);
+      }
+    });
   });
 
   ws.on("error", (error) => {
